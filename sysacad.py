@@ -1,22 +1,30 @@
  # -*- coding: utf-8 -*-
 import requests
 from BeautifulSoup import BeautifulSoup
+from conf import *
 
 class SysACADSession:
 	"Sesión de SysCAD."
-	base_url = 'http://www.alumnos.frro.utn.edu.ar/'
-	url = {
-		'login': 'menuAlumno.asp',
-	}
 
-	def __init__(self, legajo=None, password=None):
-		self.legajo = legajo
-		self.password = password
-		self.login()	
-	
+	url = URLS_DICT
+
+	def __init__(self, legajo=None, password=None, base_url=DEFAULT_BASE_URL):
+		self.base_url = base_url
+		self.login_data = {
+			'legajo': legajo,
+			'password': password,
+		}
+
 	def login(self):
+
+		# Make request
 		url = self.base_url + self.url['login']
-		login_data = {'legajo': self.legajo, 'password': self.password}
-		response = requests.post(url, data=login_data)
+		response = requests.post(url, data=self.login_data)
+
+		# Handle incorrect login
 		html = BeautifulSoup(response.text)
-		print html.title.string
+		if html.title.string == u'Ingreso Alumnos al SYSACAD' or html('p', attrs={'class': "textoError"}):
+			raise Exception('Información de login incorrecta.')
+
+		# Store session cookie
+		self.cookies = {SESSION_COOKIE_NAME: response.cookies[SESSION_COOKIE_NAME]}
