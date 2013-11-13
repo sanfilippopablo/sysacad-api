@@ -20,9 +20,3 @@ class SysACADSession:
 		response = requests.post(url, data=login_data)
 		html = BeautifulSoup(response.text)
 		print html.title.string
-
-def main():
-	s = SysACADSession('40261', '28357987')
-
-if __name__ == '__main__':
-	main()
