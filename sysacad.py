@@ -15,6 +15,16 @@ class SysACADSession:
 			'password': password,
 		}
 
+	def __get(self, url_action):
+		self.login()
+		url = self.base_url + url_action
+		return requests.get(url, cookies=self.cookies) 
+
+	def __post(self, url_action, data):
+		self.login()
+		url = self.base_url + url_action
+		return requests.post(url, cookies=self.cookies, data=data)
+
 	def login(self):
 
 		# Make request
