@@ -3,7 +3,7 @@ import requests
 from BeautifulSoup import BeautifulSoup
 from conf import *
 
-class SysACADSession:
+class SysacadSession:
 	"Sesión de SysCAD."
 
 	url = URLS_DICT
