@@ -38,3 +38,15 @@ class SysacadSession:
 
 		# Store session cookie
 		self.cookies = {SESSION_COOKIE_NAME: response.cookies[SESSION_COOKIE_NAME]}
+
+	def listMateriasPlan(self):
+		response = self._get(self.url['materias_plan'])
+		html = BeautifulSoup(response.text)
+		materias = []
+		for tr in html('tr', attrs={'class': "textoTabla"}):
+			materia = []
+			for td in tr('td'):
+				materia.append(td.string)
+			materias.append(materia)
+		del materias[0]
+		return materias
