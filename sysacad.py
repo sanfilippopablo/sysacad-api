@@ -37,10 +37,13 @@ class SysacadSession:
 			raise Exception('Información de login incorrecta.')
 
 		# Store session cookie
-		self.cookies = {SESSION_COOKIE_NAME: response.cookies[SESSION_COOKIE_NAME]}
+		for key in response.cookies.keys():
+			if key.find(SESSION_COOKIE_NAME):
+				break
+		self.cookies = {key: response.cookies[key]}
 
 	def _getInfoFromTable(self, url):
-		response = self._get(self.url['materias_plan'])
+		response = self._get(url)
 		html = BeautifulSoup(response.text)
 		trs = []
 		for tr in html('tr', attrs={'class': "textoTabla"}):
@@ -52,7 +55,34 @@ class SysacadSession:
 		return trs
 
 	def listMateriasPlan(self):
-		return self._getInfoFromTable(self.url['materias_plan'])
+		materias = self._getInfoFromTable(self.url['materias_plan'])
+		data = []
+		for materia in materias:
+			data.append({
+				'anio': materia[0],
+				'duracion': materia[1],
+				'nombre': materia[2],
+				'se_cursa': materia[3],
+				'se_rinde': materia[4]
+			})
+		return data
+
 
 	def estadoAcademico(self):
-		return self._getInfoFromTable(self.url['estado_academico'])
+		materias = self._getInfoFromTable(self.url['estado_academico'])
+		data = []
+		for materia in materias:
+			data.append({
+				'anio': materia[0],
+				'nombre': materia[1],
+				'estado': materia[2],
+				'plan': materia[3]
+			})
+		return data
+
+def main():
+	s = SysacadSession('40261', 'am3toktf99')
+	print s.estadoAcademico()
+
+if __name__ == '__main__':
+	main()
