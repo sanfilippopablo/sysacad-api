@@ -8,5 +8,6 @@ SESSION_COOKIE_NAME = 'ASPSESSIONID'
 URLS_DICT = {
 		'login': 'menuAlumno.asp',
 		'materias_plan': 'materiasPlan.asp',
-		'estado_academico': 'estadoAcademico.asp'
+		'estado_academico': 'estadoAcademico.asp',
+		'correlatividad_cursado': 'correlatividadCursado.asp',
 	}

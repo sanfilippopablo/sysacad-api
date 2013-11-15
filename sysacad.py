@@ -42,47 +42,28 @@ class SysacadSession:
 				break
 		self.cookies = {key: response.cookies[key]}
 
-	def _getInfoFromTable(self, url):
+	def _getInfoFromTable(self, url, keys):
 		response = self._get(url)
 		html = BeautifulSoup(response.text)
-		trs = []
+		data = []
 		for tr in html('tr', attrs={'class': "textoTabla"}):
-			tds = []
+			tds = {}
+			i = 0
 			for td in tr('td'):
-				tds.append(td.string)
-			trs.append(tds)
-		del trs[0]
-		return trs
+				tds[keys[i]] = td.getText()
+				i += 1
+			data.append(tds)
+		del data[0]
+		return data
 
 	def listMateriasPlan(self):
-		materias = self._getInfoFromTable(self.url['materias_plan'])
-		data = []
-		for materia in materias:
-			data.append({
-				'anio': materia[0],
-				'duracion': materia[1],
-				'nombre': materia[2],
-				'se_cursa': materia[3],
-				'se_rinde': materia[4]
-			})
-		return data
-
+		keys = ('anio', 'duracion', 'nombre', 'se_cursa', 'se_rinde')
+		return self._getInfoFromTable(self.url['materias_plan'], keys)
 
 	def estadoAcademico(self):
-		materias = self._getInfoFromTable(self.url['estado_academico'])
-		data = []
-		for materia in materias:
-			data.append({
-				'anio': materia[0],
-				'nombre': materia[1],
-				'estado': materia[2],
-				'plan': materia[3]
-			})
-		return data
+		keys = ('anio', 'nombre', 'estado', 'plan')
+		return self._getInfoFromTable(self.url['estado_academico'], keys)
 
-def main():
-	s = SysacadSession('40261', 'am3toktf99')
-	print s.estadoAcademico()
-
-if __name__ == '__main__':
-	main()
+	def correlatividadCursado(self):
+		keys = ('anio', 'nombre', 'estado', 'plan')
+		return self._getInfoFromTable(self.url['correlatividad_cursado'], keys)
