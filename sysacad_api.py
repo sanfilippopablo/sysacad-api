@@ -8,8 +8,8 @@ class SysacadSession:
 
 	url = URLS_DICT
 
-	def __init__(self, legajo=None, password=None, base_url=DEFAULT_BASE_URL):
-		self.base_url = base_url
+	def __init__(self, fr, legajo, password):
+		self.base_url = BASE_URL[fr]
 		self.login_data = {
 			'legajo': legajo,
 			'password': password,

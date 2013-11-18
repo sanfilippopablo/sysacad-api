@@ -1,8 +1,5 @@
  # -*- coding: utf-8 -*-
 
-# URL en la que se encuentra montado SysACAD.
-DEFAULT_BASE_URL = 'http://www.alumnos.frro.utn.edu.ar/'
-
 SESSION_COOKIE_NAME = 'ASPSESSIONID'
 
 URLS_DICT = {
@@ -11,3 +8,9 @@ URLS_DICT = {
 		'estado_academico': 'estadoAcademico.asp',
 		'correlatividad_cursado': 'correlatividadCursado.asp',
 	}
+
+
+# URL en la que se encuentra montado Sysacad según facultad regional.
+BASE_URL = {
+	'frro': 'http://www.alumnos.frro.utn.edu.ar/',
+}
