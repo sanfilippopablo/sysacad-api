@@ -1,5 +1,5 @@
  # -*- coding: utf-8 -*-
-import requests
+import requests, re
 from BeautifulSoup import BeautifulSoup
 from conf import *
 
@@ -8,8 +8,9 @@ class SysacadSession:
 
 	url = URLS_DICT
 
-	def __init__(self, base_url=None):
+	def __init__(self, base_url=None, cookies=None):
 		self.base_url = base_url or DEFAULT_BASE_URL
+		self.cookies = cookies
 
 	def _get(self, url_action):
 		if not 'cookies' in dir(self):
@@ -65,3 +66,11 @@ class SysacadSession:
 	def correlatividadCursado(self):
 		keys = ('anio', 'nombre', 'estado', 'plan')
 		return self._getInfoFromTable(self.url['correlatividad_cursado'], keys)
+
+	def datosAlumno(self):
+		response = self._get(self.url['estado_academico'])
+		html = BeautifulSoup(response.text)
+		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
+		p = re.compile(ur'Estado académico de (.*), (.*) al .* PM')
+		data = p.search(cadena).groups()
+		return {'nombre': data[1], 'apellido': data[0]}
