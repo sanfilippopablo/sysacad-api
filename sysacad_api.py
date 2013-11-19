@@ -8,28 +8,26 @@ class SysacadSession:
 
 	url = URLS_DICT
 
-	def __init__(self, fr, legajo, password):
+	def __init__(self, fr):
 		self.base_url = BASE_URL[fr]
-		self.login_data = {
-			'legajo': legajo,
-			'password': password,
-		}
 
 	def _get(self, url_action):
-		self.login()
+		if not 'cookies' in dir(self):
+			raise Exception('Debes primero hacer login.')
 		url = self.base_url + url_action
 		return requests.get(url, cookies=self.cookies) 
 
 	def _post(self, url_action, data):
-		self.login()
+		if not 'cookies' in dir(self):
+			raise Exception('Debes primero hacer login.')
 		url = self.base_url + url_action
 		return requests.post(url, cookies=self.cookies, data=data)
 
-	def login(self):
+	def login(self, legajo, password):
 
 		# Make request
 		url = self.base_url + self.url['login']
-		response = requests.post(url, data=self.login_data)
+		response = requests.post(url, data={'legajo': legajo,'password': password})
 
 		# Handle incorrect login
 		html = BeautifulSoup(response.text)
