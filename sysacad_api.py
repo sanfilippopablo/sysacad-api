@@ -8,8 +8,8 @@ class SysacadSession:
 
 	url = URLS_DICT
 
-	def __init__(self, fr):
-		self.base_url = BASE_URL[fr]
+	def __init__(self, base_url=None):
+		self.base_url = base_url or DEFAULT_BASE_URL
 
 	def _get(self, url_action):
 		if not 'cookies' in dir(self):

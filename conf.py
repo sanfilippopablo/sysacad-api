@@ -11,6 +11,4 @@ URLS_DICT = {
 
 
 # URL en la que se encuentra montado Sysacad según facultad regional.
-BASE_URL = {
-	'frro': 'http://www.alumnos.frro.utn.edu.ar/',
-}
+DEFAULT_BASE_URL = 'http://www.alumnos.frro.utn.edu.ar/'
