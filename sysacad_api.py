@@ -74,3 +74,11 @@ class SysacadSession:
 		p = re.compile(ur'Estado académico de (.*), (.*) al .* PM')
 		data = p.search(cadena).groups()
 		return {'nombre': data[1], 'apellido': data[0]}
+
+	def materiasEnCurso(self):
+		estado_academico = self.estadoAcademico()
+		materias = []
+		for materia in estado_academico:
+			if materia['estado'].find('Cursa') != -1:
+				materias.append(materia['nombre'])
+		return materias
