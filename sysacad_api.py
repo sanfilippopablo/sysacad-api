@@ -82,3 +82,74 @@ class SysacadSession:
 			if materia['estado'].find('Cursa') != -1:
 				materias.append(materia['nombre'])
 		return materias
+
+	def allDataFromEstadoAcademico(self):
+		# Inicializar
+		data = {}
+		response = self._get(self.url['estado_academico'])
+		html = BeautifulSoup(response.text)
+
+		# Datos alumno
+		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
+		p = re.compile(ur'Estado académico de (.*), (.*) al .* PM')
+		groups = p.search(cadena).groups()
+		data['nombre_alumno'] = groups[0]
+		data['apellido_alumno'] = groups[1]
+
+		#Datos de la materia
+		data['materias'] = []
+		keys = ('anio', 'nombre', 'estado', 'plan')
+		materias = []
+		for tr in html('tr', attrs={'class': "textoTabla"}):
+			tds = {}
+			i = 0
+			for td in tr('td'):
+				tds[keys[i]] = td.getText()
+				i += 1
+			materias.append(tds)
+		del materias[0]
+		aprobadas_regex = re.compile(ur'Aprobada con (\d*) Tomo: (\d*) Folio: (\d*)')
+		cursa_regex = re.compile(ur'Cursa en (.*) Aula (.*)')
+		regular_regex = re.compile(ur'Regularizada en (\d*)( \(.*\))?')
+		for mat in materias:
+			materia = {}
+			materia['anio'] = mat['anio']
+			materia['nombre'] = mat['nombre']
+			materia['plan'] = mat['plan']
+
+			match = aprobadas_regex.search(mat['estado'])
+			if match != None:
+				groups = match.groups()
+				materia['estado'] = {
+					'estado': 'aprobada',
+					'nota': groups[0],
+					'tomo': groups[1],
+					'folio': groups[2],
+				}
+				data['materias'].append(materia)
+				continue
+
+			match = cursa_regex.search(mat['estado'])
+			if match != None:
+				groups = match.groups()
+				materia['estado'] = {
+					'estado': 'cursa',
+					'comision': groups[0],
+					'aula': groups[1],
+				}
+				data['materias'].append(materia)
+				continue
+
+			match = regular_regex.search(mat['estado'])
+			if match != None:
+				groups = match.groups()
+				materia['estado'] = {
+					'estado': 'regular',
+					'anio': groups[0],
+				}
+				data['materias'].append(materia)
+				continue
+
+			materia['estado'] = {'estado': 'no_inscripto'}
+			data['materias'].append(materia)
+		return data
