@@ -7,6 +7,7 @@ URLS_DICT = {
 		'materias_plan': 'materiasPlan.asp',
 		'estado_academico': 'estadoAcademico.asp',
 		'correlatividad_cursado': 'correlatividadCursado.asp',
+		'change_password': 'cambioPassword.asp',
 	}
 
 

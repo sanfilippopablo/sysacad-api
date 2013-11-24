@@ -153,3 +153,13 @@ class SysacadSession:
 			materia['estado'] = {'estado': 'no_inscripto'}
 			data['materias'].append(materia)
 		return data
+
+	def change_password(self, old_pass, new_pass):
+		data = {
+			'passwordActual': old_pass,
+			'password': new_pass,
+			'pruebaPassword': new_pass,
+		}
+		response = self._post(self.url['change_password'], data=data)
+		if not response.text.find('cambiada correctamente'):
+			raise Exception('Contraseña no cambiada correctamente.')
