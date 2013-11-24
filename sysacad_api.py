@@ -91,7 +91,7 @@ class SysacadSession:
 
 		# Datos alumno
 		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
-		p = re.compile(ur'Estado académico de (.*), (.*) al .* PM')
+		p = re.compile(ur'Estado académico de (.*), (.*) al .*')
 		groups = p.search(cadena).groups()
 		data['nombre_alumno'] = groups[0]
 		data['apellido_alumno'] = groups[1]
