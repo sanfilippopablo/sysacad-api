@@ -3,7 +3,7 @@ import requests, re
 from BeautifulSoup import BeautifulSoup
 from conf import *
 
-class SysacadSession:
+class SysacadSession(object):
 	"Sesión de SysCAD."
 
 	url = URLS_DICT
@@ -12,20 +12,19 @@ class SysacadSession:
 		self.base_url = base_url or DEFAULT_BASE_URL
 		self.cookies = cookies
 
-	def _get(self, url_action):
+	def _get(self, url_action, data=None):
 		if not 'cookies' in dir(self):
 			raise Exception('Debes primero hacer login.')
 		url = self.base_url + url_action
-		return requests.get(url, cookies=self.cookies) 
+		return requests.get(url, cookies=self.cookies, params=data) 
 
-	def _post(self, url_action, data):
+	def _post(self, url_action, data=None):
 		if not 'cookies' in dir(self):
 			raise Exception('Debes primero hacer login.')
 		url = self.base_url + url_action
 		return requests.post(url, cookies=self.cookies, data=data)
 
 	def login(self, legajo, password):
-
 		# Make request
 		url = self.base_url + self.url['login']
 		response = requests.post(url, data={'legajo': legajo,'password': password})
@@ -41,31 +40,17 @@ class SysacadSession:
 				break
 		self.cookies = {key: response.cookies[key]}
 
-	def _getInfoFromTable(self, url, keys):
-		response = self._get(url)
-		html = BeautifulSoup(response.text)
+	def _data_from_table(self, bs_html, keys):
 		data = []
-		for tr in html('tr', attrs={'class': "textoTabla"}):
+		for tr in bs_html('tr', attrs={'class': "textoTabla"}):
 			tds = {}
 			i = 0
 			for td in tr('td'):
 				tds[keys[i]] = td.getText()
 				i += 1
 			data.append(tds)
-		del data[0]
+		del data[0] # First row is always the table header.
 		return data
-
-	def listMateriasPlan(self):
-		keys = ('anio', 'duracion', 'nombre', 'se_cursa', 'se_rinde')
-		return self._getInfoFromTable(self.url['materias_plan'], keys)
-
-	def estadoAcademico(self):
-		keys = ('anio', 'nombre', 'estado', 'plan')
-		return self._getInfoFromTable(self.url['estado_academico'], keys)
-
-	def correlatividadCursado(self):
-		keys = ('anio', 'nombre', 'estado', 'plan')
-		return self._getInfoFromTable(self.url['correlatividad_cursado'], keys)
 
 	def datosAlumno(self):
 		response = self._get(self.url['estado_academico'])
@@ -83,7 +68,7 @@ class SysacadSession:
 				materias.append(materia['nombre'])
 		return materias
 
-	def allDataFromEstadoAcademico(self):
+	def estado_academico_data(self):
 		# Inicializar
 		data = {}
 		response = self._get(self.url['estado_academico'])
@@ -93,24 +78,17 @@ class SysacadSession:
 		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
 		p = re.compile(ur'Estado académico de (.*), (.*) al .*')
 		groups = p.search(cadena).groups()
-		data['nombre_alumno'] = groups[0]
-		data['apellido_alumno'] = groups[1]
+		data['datos_alumno'] = groups[1], groups[0]
 
 		#Datos de la materia
 		data['materias'] = []
 		keys = ('anio', 'nombre', 'estado', 'plan')
-		materias = []
-		for tr in html('tr', attrs={'class': "textoTabla"}):
-			tds = {}
-			i = 0
-			for td in tr('td'):
-				tds[keys[i]] = td.getText()
-				i += 1
-			materias.append(tds)
-		del materias[0]
+		materias = self._data_from_table(html, keys)
+
 		aprobadas_regex = re.compile(ur'Aprobada con (\d*) Tomo: (\d*) Folio: (\d*)')
 		cursa_regex = re.compile(ur'Cursa en (.*) Aula (.*)')
 		regular_regex = re.compile(ur'Regularizada en (\d*)( \(.*\))?')
+
 		for mat in materias:
 			materia = {}
 			materia['anio'] = mat['anio']
@@ -152,6 +130,7 @@ class SysacadSession:
 
 			materia['estado'] = {'estado': 'no_inscripto'}
 			data['materias'].append(materia)
+
 		return data
 
 	def change_password(self, old_pass, new_pass):
