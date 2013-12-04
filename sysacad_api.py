@@ -69,22 +69,6 @@ class SysacadSession(object):
 		del data[0] # First row is always the table header.
 		return data
 
-	def datosAlumno(self):
-		response = self._get(self.url['estado_academico'])
-		html = BeautifulSoup(response.text)
-		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
-		p = re.compile(ur'Estado académico de (.*), (.*) al .* PM')
-		data = p.search(cadena).groups()
-		return {'nombre': data[1], 'apellido': data[0]}
-
-	def materiasEnCurso(self):
-		estado_academico = self.estadoAcademico()
-		materias = []
-		for materia in estado_academico:
-			if materia['estado'].find('Cursa') != -1:
-				materias.append(materia['nombre'])
-		return materias
-
 	def estado_academico_data(self):
 		# Inicializar
 		data = {}
