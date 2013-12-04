@@ -1,3 +1,6 @@
+# Personal data for tests
+tests_data.py
+
 *.py[cod]
 
 # C extensions
