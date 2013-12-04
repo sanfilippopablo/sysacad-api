@@ -27,16 +27,19 @@ class TestLogin(unittest.TestCase):
 		sysacad = SysacadSession(BASE_URL)
 		self.assertRaises(SysacadSession.AuthenticationError, sysacad.estado_academico_data)
 
-class TestEstadoAcademicoData(unittest.TestCase):
+class TestDataMethods(unittest.TestCase):
 
 	def setUp(self):
 		sysacad = SysacadSession(BASE_URL)
 		sysacad.login(LEGAJO, PASSWORD)
 		self.estado_academico_data = sysacad.estado_academico_data()
+		self.correlatividad_cursado_data = sysacad.correlatividad_cursado_data()
 
+	def test_estado_academico_data(self):
+		self.assertEqual(self.estado_academico_data, estado_academico_data)
 
-	def test_nombre_apellido(self):
-		self.assertEqual(self.estado_academico_data['datos_alumno'], ('Pablo', 'Sanfilippo'))
+	def test_correlatividad_cursado_data(self):
+		self.assertEqual(self.correlatividad_cursado_data, correlatividad_cursado_data)
 
 	
 

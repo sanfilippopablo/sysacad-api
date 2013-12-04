@@ -1,6 +1,6 @@
  # -*- coding: utf-8 -*-
-import requests, re
-from BeautifulSoup import BeautifulSoup
+import requests, re, pprint
+from bs4 import BeautifulSoup
 
 class SysacadSession(object):
 	"Sesión de SysCAD."
@@ -139,6 +139,62 @@ class SysacadSession(object):
 
 			materia['estado'] = {'estado': 'no_inscripto'}
 			data['materias'].append(materia)
+
+		return data
+
+	def correlatividad_cursado_data(self):
+		# Inicializar
+		data = {}
+
+		url = self.base_url + self.url['correlatividad_cursado']
+		response = self.session.get(url) 
+		text = response.text.replace('<titleCorrelatividad', '<title>Correlatividad')
+
+		if self._is_login_page(text):
+				raise self.AuthenticationError('You must call .login(legajo, password).')
+
+		html = BeautifulSoup(text, 'lxml')
+
+		#Datos de la materia
+		data['materias'] = []
+		keys = ('anio', 'materia', 'correlatividad', 'plan')
+		table_data = self._data_from_table(html, keys)
+		for row in table_data:
+				mat = dict()
+				mat['anio'] = row['anio']
+				mat['materia'] = row['materia']
+				mat['plan'] = row['plan']
+				mat['estado'] = {}
+
+				# Parse correlatividades
+				correlatividades = row['correlatividad'].split('<br/>')
+				regularizar_regex = re.compile('No regularizó ([^()]*) (?:\(Ord\. 1150\))?')
+				aprobar_regex = re.compile('No aprobó (?:ni está inscripto a )?([^()]*)(?: \(Ord\. 1150\))?')
+
+				for correlatividad in correlatividades:
+						if correlatividad.find('Puede cursar') != -1:
+								mat['estado']['puede_cursar'] = True
+						
+						match = regularizar_regex.search(correlatividad)
+						if match != None:
+										mat['estado']['puede_cursar'] = False
+										if not 'condiciones' in mat['estado'].keys():
+												mat['estado']['condiciones'] = []
+										mat['estado']['condiciones'].append({
+														'condicion': 'regularizar',
+														'materia': match.groups()[0].strip()
+												})
+
+						match = aprobar_regex.search(correlatividad)
+						if match != None:
+										mat['estado']['puede_cursar'] = False
+										if not 'condiciones' in mat['estado'].keys():
+												mat['estado']['condiciones'] = []
+										mat['estado']['condiciones'].append({
+														'condicion': 'aprobar',
+														'materia': match.groups()[0].strip()
+												})
+				data['materias'].append(mat)
 
 		return data
 
