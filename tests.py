@@ -23,6 +23,10 @@ class TestLogin(unittest.TestCase):
 		sysacad = SysacadSession(BASE_URL)
 		self.assertRaises(SysacadSession.AuthenticationError, sysacad.login, LEGAJO + '123', PASSWORD)
 
+	def test_operations_without_login(self):
+		sysacad = SysacadSession(BASE_URL)
+		self.assertRaises(SysacadSession.AuthenticationError, sysacad.estado_academico_data)
+
 class TestEstadoAcademicoData(unittest.TestCase):
 
 	def setUp(self):

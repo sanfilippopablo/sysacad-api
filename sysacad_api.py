@@ -17,37 +17,45 @@ class SysacadSession(object):
 
 	url = URLS_DICT
 
-	def __init__(self, base_url=None, cookies=None):
+	def __init__(self, base_url=None, session=None):
 		self.base_url = base_url or DEFAULT_BASE_URL
-		self.cookies = cookies
+		if session:
+			assert isinstance(requests.Session, session), 'Object session must be instance of requests.Session.'
+			self.session = session
+		else:
+			self.session = requests.Session()
+
+	def _is_login_page(self, text):
+		html = BeautifulSoup(text)
+		if html.title.string == u'Ingreso Alumnos al SYSACAD' or html('p', attrs={'class': "textoError"}):
+			return True
+		return False
 
 	def _get(self, url_action, data=None):
-		if not 'cookies' in dir(self):
-			raise self.AuthenticationError('Debes primero hacer login.')
 		url = self.base_url + url_action
-		return requests.get(url, cookies=self.cookies, params=data) 
+		response = self.session.get(url, params=data) 
+
+		if self._is_login_page(response.text):
+			raise self.AuthenticationError('You must call .login(legajo, password).')
+
+		return response
 
 	def _post(self, url_action, data=None):
-		if not 'cookies' in dir(self):
-			raise self.AuthenticationError('Debes primero hacer login.')
 		url = self.base_url + url_action
-		return requests.post(url, cookies=self.cookies, data=data)
+		response = self.session.post(url, data=data)
+
+		if self._is_login_page(response.text):
+			raise self.AuthenticationError('You must call .login(legajo, password).')
+
+		return response
 
 	def login(self, legajo, password):
-		# Make request
+
 		url = self.base_url + self.url['login']
-		response = requests.post(url, data={'legajo': legajo,'password': password})
-
-		# Handle incorrect login
-		html = BeautifulSoup(response.text)
-		if html.title.string == u'Ingreso Alumnos al SYSACAD' or html('p', attrs={'class': "textoError"}):
+		response = self.session.post(url, data={'legajo': legajo,'password': password})
+	
+		if self._is_login_page(response.text):
 			raise self.AuthenticationError('Información de login incorrecta.')
-
-		# Store session cookie
-		for key in response.cookies.keys():
-			if key.find(SESSION_COOKIE_NAME):
-				break
-		self.cookies = {key: response.cookies[key]}
 
 	def _data_from_table(self, bs_html, keys):
 		data = []
