@@ -1,13 +1,11 @@
  # -*- coding: utf-8 -*-
 import requests, re
 from BeautifulSoup import BeautifulSoup
-from conf import *
-
 
 class SysacadSession(object):
 	"Sesión de SysCAD."
 
-	# Exceptions
+	## Exceptions ##
 
 	class AuthenticationError(Exception):
 		pass
@@ -15,10 +13,17 @@ class SysacadSession(object):
 	class OperationError(Exception):
 		pass
 
-	url = URLS_DICT
+	# Urls map.
+	url = {
+		'login': 'menuAlumno.asp',
+		'materias_plan': 'materiasPlan.asp',
+		'estado_academico': 'estadoAcademico.asp',
+		'correlatividad_cursado': 'correlatividadCursado.asp',
+		'change_password': 'cambioPassword.asp',
+	}
 
-	def __init__(self, base_url=None, session=None):
-		self.base_url = base_url or DEFAULT_BASE_URL
+	def __init__(self, base_url, session=None):
+		self.base_url = base_url
 		if session:
 			assert isinstance(requests.Session, session), 'Object session must be instance of requests.Session.'
 			self.session = session
@@ -68,6 +73,9 @@ class SysacadSession(object):
 			data.append(tds)
 		del data[0] # First row is always the table header.
 		return data
+
+
+	## Get data methods ##
 
 	def estado_academico_data(self):
 		# Inicializar
@@ -133,6 +141,8 @@ class SysacadSession(object):
 			data['materias'].append(materia)
 
 		return data
+
+	## Post data Methods ##
 
 	def change_password(self, old_pass, new_pass):
 		data = {
