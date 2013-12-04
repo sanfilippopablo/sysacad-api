@@ -3,8 +3,17 @@ import requests, re
 from BeautifulSoup import BeautifulSoup
 from conf import *
 
+
 class SysacadSession(object):
 	"Sesión de SysCAD."
+
+	# Exceptions
+
+	class AuthenticationError(Exception):
+		pass
+
+	class OperationError(Exception):
+		pass
 
 	url = URLS_DICT
 
@@ -14,13 +23,13 @@ class SysacadSession(object):
 
 	def _get(self, url_action, data=None):
 		if not 'cookies' in dir(self):
-			raise Exception('Debes primero hacer login.')
+			raise self.AuthenticationError('Debes primero hacer login.')
 		url = self.base_url + url_action
 		return requests.get(url, cookies=self.cookies, params=data) 
 
 	def _post(self, url_action, data=None):
 		if not 'cookies' in dir(self):
-			raise Exception('Debes primero hacer login.')
+			raise self.AuthenticationError('Debes primero hacer login.')
 		url = self.base_url + url_action
 		return requests.post(url, cookies=self.cookies, data=data)
 
@@ -32,7 +41,7 @@ class SysacadSession(object):
 		# Handle incorrect login
 		html = BeautifulSoup(response.text)
 		if html.title.string == u'Ingreso Alumnos al SYSACAD' or html('p', attrs={'class': "textoError"}):
-			raise Exception('Información de login incorrecta.')
+			raise self.AuthenticationError('Información de login incorrecta.')
 
 		# Store session cookie
 		for key in response.cookies.keys():
@@ -141,4 +150,4 @@ class SysacadSession(object):
 		}
 		response = self._post(self.url['change_password'], data=data)
 		if not response.text.find('cambiada correctamente'):
-			raise Exception('Contraseña no cambiada correctamente.')
+			raise self.OperationError('Contraseña no cambiada correctamente.')
