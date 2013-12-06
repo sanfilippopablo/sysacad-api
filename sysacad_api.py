@@ -25,7 +25,7 @@ class SysacadSession(object):
 	def __init__(self, base_url, session=None):
 		self.base_url = base_url
 		if session:
-			assert isinstance(requests.Session, session), 'Object session must be instance of requests.Session.'
+			assert isinstance(session, requests.Session), 'Object session must be instance of requests.Session.'
 			self.session = session
 		else:
 			self.session = requests.Session()
