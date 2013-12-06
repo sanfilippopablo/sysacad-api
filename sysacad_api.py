@@ -1,5 +1,5 @@
  # -*- coding: utf-8 -*-
-import requests, re, pprint
+import requests, re, pprint, datetime
 from bs4 import BeautifulSoup
 
 class SysacadSession(object):
@@ -197,6 +197,42 @@ class SysacadSession(object):
 				data['materias'].append(mat)
 
 		return data
+
+	def get_fechas_examen(self, plan, codigo_materia, nombre_materia):
+		data = {}
+		params = {
+			'plan': plan,
+			'materia': codigo_materia,
+			'nombre': nombre_materia
+		}
+		self._get('materiasExamen.asp')
+		response = self._get('fechasExamen.asp', data=params)
+		html = BeautifulSoup(response.text)
+		inputs = html('input', attrs={'name': 'seleccion'})
+		regex = re.compile('(?P<fecha>.+) Tribunal (?P<profesor>[A-Za-z]+) (?P<comision>(?:\d+ )+)turno (?P<turno>[A-Za-z]+)')
+		fechas = []
+		for inp in inputs:
+			regex_data = regex.search(inp.next_sibling).groupdict()
+			fecha = datetime.datetime.strptime(regex_data['fecha'].strip(), '%d/%m/%Y').date()
+			profesor = regex_data['profesor'].capitalize()
+			comisiones = regex_data['comision'].strip().split(' ')
+			for d in fechas:
+				"Iterando fechas. Ahora: ", d['fecha']
+				if d['fecha'] == fecha:
+					date = d
+					break
+			else:
+				date = {
+					'tribunales': [],
+					'fecha': fecha
+				}
+				fechas.append(date)
+			date['tribunales'].append({
+				'profesor': profesor,
+				'comisiones': comisiones
+			})
+
+		return fechas
 
 	## Post data Methods ##
 
