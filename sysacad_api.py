@@ -212,6 +212,7 @@ class SysacadSession(object):
 		regex = re.compile('(?P<fecha>.+) Tribunal (?P<profesor>[A-Za-z]+) (?P<comision>(?:\d+ )+)turno (?P<turno>[A-Za-z]+)')
 		fechas = []
 		for inp in inputs:
+			value = inp['value']
 			regex_data = regex.search(inp.next_sibling).groupdict()
 			fecha = datetime.datetime.strptime(regex_data['fecha'].strip(), '%d/%m/%Y').date()
 			profesor = regex_data['profesor'].capitalize()
@@ -228,6 +229,7 @@ class SysacadSession(object):
 				}
 				fechas.append(date)
 			date['tribunales'].append({
+				'value': value,
 				'profesor': profesor,
 				'comisiones': comisiones
 			})
