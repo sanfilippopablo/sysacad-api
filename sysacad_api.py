@@ -20,6 +20,7 @@ class SysacadSession(object):
 		'estado_academico': 'estadoAcademico.asp',
 		'correlatividad_cursado': 'correlatividadCursado.asp',
 		'change_password': 'cambioPassword.asp',
+		'inscripcion_examen': 'inscripcionExamen.asp',
 	}
 
 	def __init__(self, base_url, session=None):
@@ -238,6 +239,40 @@ class SysacadSession(object):
 
 	## Post data Methods ##
 
+	def inscribir_a_examen(self, plan, codigo_materia, nombre_materia, fecha, profesor=None, comision=None):
+		fechas = self.get_fechas_examen(plan=plan, codigo_materia=codigo_materia, nombre_materia=nombre_materia)
+		mesa = filter(lambda m: m['fecha'] == fecha, fechas)[0]
+		if not mesa:
+			raise self.OperationError('Invalid date.')
+
+		if comision:
+			try:
+				tribunal = filter(lambda t: comision in t['comisiones'], mesa['tribunales'])[0]
+			except IndexError:
+				raise self.OperationError('No existe tribunal con esa comision.')
+			if profesor and tribunal['profesor'] != profesor:
+				raise self.OperationError('Profesor y comision no coinciden.')
+
+		elif profesor:
+			try:
+				tribunal = filter(lambda t: t['profesor'] == profesor, mesa['tribunales'])[0]
+			except IndexError:
+				raise self.OperationError('No existe tribunal con ese profesor.')
+			if comision and not comision in tribunal['comisiones']:
+				raise self.OperationError('Profesor y comision no coinciden.')
+
+		else:
+			raise self.OperationError('Debes pasar al menos uno de profesor o comision.')
+
+		data = {
+			'plan': plan,
+			'materia': codigo_materia,
+			'seleccion': tribunal['value']
+		}
+		response = self._post(self.url['inscripcion_examen'], data=data)
+
+		# Parsear los datos relevantes y devolverlos.
+
 	def change_password(self, old_pass, new_pass):
 		data = {
 			'passwordActual': old_pass,
@@ -247,3 +282,11 @@ class SysacadSession(object):
 		response = self._post(self.url['change_password'], data=data)
 		if not response.text.find('cambiada correctamente'):
 			raise self.OperationError('Contraseña no cambiada correctamente.')
+
+def main():
+	sysacad = SysacadSession(base_url='http://www.alumnos.frro.utn.edu.ar/')
+	sysacad.login('40261', 'dvorak')
+	sysacad.inscribir_a_examen('2008', '203', 'Análisis Matemático II', datetime.date(2013, 12, 18), profesor=u'Vozzi')
+
+if __name__ == '__main__':
+	main()
