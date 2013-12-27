@@ -78,6 +78,35 @@ class SysacadSession(object):
 
 	## Get data methods ##
 
+	def materias_plan_data(self):
+		# Inicializar
+		data = {}
+		response = self._get(self.url['materias_plan'])
+		html = BeautifulSoup(response.text)
+
+		# Nombre de la carrera, plan
+		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText().strip()
+		p = re.compile(ur'Materias de (?P<carrera>.+) plan (?P<plan>\d+)')
+		data.update(p.search(cadena).groupdict())
+
+		# Materias
+		keys = ('anio', 'cursado', 'materia', 'se_cursa', 'se_rinde')
+		data['materias'] = self._data_from_table(html, keys)
+		for mat in data['materias']:
+			# Procesar se_cursa
+			if mat['se_cursa'].find('Si') != -1:
+				mat['se_cursa'] = True
+			else:
+				mat['se_cursa'] = False
+
+			# Procesar se_rinde
+			if mat['se_rinde'].find('Si') != -1:
+				mat['se_rinde'] = True
+			else:
+				mat['se_rinde'] = False
+
+		return data
+
 	def estado_academico_data(self):
 		# Inicializar
 		data = {}
@@ -282,11 +311,3 @@ class SysacadSession(object):
 		response = self._post(self.url['change_password'], data=data)
 		if not response.text.find('cambiada correctamente'):
 			raise self.OperationError('Contraseña no cambiada correctamente.')
-
-def main():
-	sysacad = SysacadSession(base_url='http://www.alumnos.frro.utn.edu.ar/')
-	sysacad.login('40261', 'dvorak')
-	sysacad.inscribir_a_examen('2008', '203', 'Análisis Matemático II', datetime.date(2013, 12, 18), profesor=u'Vozzi')
-
-if __name__ == '__main__':
-	main()
