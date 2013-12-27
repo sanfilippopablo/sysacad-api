@@ -9,7 +9,7 @@ setup(
     url='http://pypi.python.org/pypi/sysacad-api/',
     license='LICENSE.txt',
     description='API para el sistema de gestión de alumnos  de UTN Sysacad.',
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
     install_requires=[
         "requests >= 2.0.0",
 	"BeautifulSoup4 >= 4.0",
