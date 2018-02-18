@@ -1,5 +1,5 @@
  # -*- coding: utf-8 -*-
-import requests, re, pprint, datetime
+import requests, re, pprint, datetime, dateparser
 from bs4 import BeautifulSoup
 
 class SysacadSession(object):
@@ -17,6 +17,7 @@ class SysacadSession(object):
 	url = {
 		'login': 'menuAlumno.asp',
 		'materias_plan': 'materiasPlan.asp',
+		'examenes': 'examenes.asp',
 		'estado_academico': 'estadoAcademico.asp',
 		'correlatividad_cursado': 'correlatividadCursado.asp',
 		'change_password': 'cambioPassword.asp',
@@ -32,7 +33,7 @@ class SysacadSession(object):
 			self.session = requests.Session()
 
 	def _is_login_page(self, text):
-		html = BeautifulSoup(text)
+		html = BeautifulSoup(text, 'lxml')
 		if html.title.string == u'Ingreso Alumnos al SYSACAD' or html('p', attrs={'class': "textoError"}):
 			return True
 		return False
@@ -82,7 +83,7 @@ class SysacadSession(object):
 		# Inicializar
 		data = {}
 		response = self._get(self.url['materias_plan'])
-		html = BeautifulSoup(response.text)
+		html = BeautifulSoup(response.text, 'lxml')
 
 		# Nombre de la carrera, plan
 		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText().strip()
@@ -107,11 +108,39 @@ class SysacadSession(object):
 
 		return data
 
+	def examenes_data(self):
+		# Inicializar
+		data = {}
+		response = self._get(self.url['examenes'])
+		html = BeautifulSoup(response.text, 'lxml')
+
+		# Examenes
+		keys = ('fecha', 'materia', 'nota', 'especialidad', 'plan', 'codigo')
+		data['examenes'] = self._data_from_table(html, keys)
+		for examen in data['examenes']:
+			examen['fecha'] = dateparser.parse(examen['fecha'])
+			examen['nota'] = {
+				"uno": 1,
+				"dos": 2,
+				"tres": 3,
+				"cuatro": 4,
+				"cinco": 5,
+				"seis": 6,
+				"siete": 7,
+				"ocho": 8,
+				"nueve": 9,
+				"diez": 10,
+				"Ausen.": None
+			}[examen['nota']]
+			examen['codigo'] = int(examen['codigo'])
+
+		return data
+
 	def estado_academico_data(self):
 		# Inicializar
 		data = {}
 		response = self._get(self.url['estado_academico'])
-		html = BeautifulSoup(response.text)
+		html = BeautifulSoup(response.text, 'lxml')
 
 		# Datos alumno
 		cadena = html('td', attrs={'class': "tituloTabla"})[0].getText()
@@ -237,7 +266,7 @@ class SysacadSession(object):
 		}
 		self._get('materiasExamen.asp')
 		response = self._get('fechasExamen.asp', data=params)
-		html = BeautifulSoup(response.text)
+		html = BeautifulSoup(response.text, 'lxml')
 		inputs = html('input', attrs={'name': 'seleccion'})
 		regex = re.compile('(?P<fecha>.+) Tribunal (?P<profesor>[A-Za-z]+) (?P<comision>(?:\d+ )+)turno (?P<turno>[A-Za-z]+)')
 		fechas = []
